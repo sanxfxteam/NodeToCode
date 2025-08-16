@@ -1,0 +1,759 @@
+{
+		"version": "1.0.0",
+		"metadata":
+		{
+			"name": "BP_ThirdPersonCharacter",
+			"blueprint_type": "Normal",
+			"blueprint_class": "BP_ThirdPersonCharacter"
+		},
+		"graphs": [
+			{
+				"name": "EventGraph",
+				"graph_type": "EventGraph",
+				"nodes": [
+					{
+						"id": "N1",
+						"type": "CallFunction",
+						"name": "Jump",
+						"member_parent": "Character",
+						"member_name": "Jump",
+						"input_pins": [
+							{
+								"id": "P1",
+								"name": "",
+								"connected": true
+							},
+							{
+								"id": "P3",
+								"name": "Target",
+								"type": "Object",
+								"sub_type": "Character"
+							}
+						],
+						"output_pins": [
+							{
+								"id": "P2",
+								"name": ""
+							}
+						]
+					},
+					{
+						"id": "N2",
+						"type": "CallFunction",
+						"name": "Add Controller Pitch Input",
+						"member_parent": "Pawn",
+						"member_name": "AddControllerPitchInput",
+						"input_pins": [
+							{
+								"id": "P1",
+								"name": "",
+								"connected": true
+							},
+							{
+								"id": "P3",
+								"name": "Target",
+								"type": "Object",
+								"sub_type": "Pawn"
+							},
+							{
+								"id": "P4",
+								"name": "Val",
+								"type": "Real",
+								"sub_type": "float",
+								"default_value": "0.0",
+								"connected": true
+							}
+						],
+						"output_pins": [
+							{
+								"id": "P2",
+								"name": ""
+							}
+						]
+					},
+					{
+						"id": "N3",
+						"type": "CallFunction",
+						"name": "Add Controller Yaw Input",
+						"member_parent": "Pawn",
+						"member_name": "AddControllerYawInput",
+						"input_pins": [
+							{
+								"id": "P1",
+								"name": "",
+								"connected": true
+							},
+							{
+								"id": "P3",
+								"name": "Target",
+								"type": "Object",
+								"sub_type": "Pawn"
+							},
+							{
+								"id": "P4",
+								"name": "Val",
+								"type": "Real",
+								"sub_type": "float",
+								"default_value": "0.0",
+								"connected": true
+							}
+						],
+						"output_pins": [
+							{
+								"id": "P2",
+								"name": "",
+								"connected": true
+							}
+						]
+					},
+					{
+						"id": "N4",
+						"type": "CallFunction",
+						"name": "Add Movement Input",
+						"member_parent": "Pawn",
+						"member_name": "AddMovementInput",
+						"input_pins": [
+							{
+								"id": "P1",
+								"name": "",
+								"connected": true
+							},
+							{
+								"id": "P3",
+								"name": "Target",
+								"type": "Object",
+								"sub_type": "Pawn"
+							},
+							{
+								"id": "P4",
+								"name": "World Direction",
+								"type": "Struct",
+								"sub_type": "Vector",
+								"default_value": "0, 0, 0",
+								"connected": true
+							},
+							{
+								"id": "P5",
+								"name": "Scale Value",
+								"type": "Real",
+								"sub_type": "float",
+								"default_value": "1.000000",
+								"connected": true
+							},
+							{
+								"id": "P6",
+								"name": "Force",
+								"type": "Boolean",
+								"default_value": "false"
+							}
+						],
+						"output_pins": [
+							{
+								"id": "P2",
+								"name": ""
+							}
+						]
+					},
+					{
+						"id": "N5",
+						"type": "CallFunction",
+						"name": "Add Movement Input",
+						"member_parent": "Pawn",
+						"member_name": "AddMovementInput",
+						"input_pins": [
+							{
+								"id": "P1",
+								"name": "",
+								"connected": true
+							},
+							{
+								"id": "P3",
+								"name": "Target",
+								"type": "Object",
+								"sub_type": "Pawn"
+							},
+							{
+								"id": "P4",
+								"name": "World Direction",
+								"type": "Struct",
+								"sub_type": "Vector",
+								"default_value": "0, 0, 0",
+								"connected": true
+							},
+							{
+								"id": "P5",
+								"name": "Scale Value",
+								"type": "Real",
+								"sub_type": "float",
+								"default_value": "1.000000",
+								"connected": true
+							},
+							{
+								"id": "P6",
+								"name": "Force",
+								"type": "Boolean",
+								"default_value": "false"
+							}
+						],
+						"output_pins": [
+							{
+								"id": "P2",
+								"name": "",
+								"connected": true
+							}
+						]
+					},
+					{
+						"id": "N6",
+						"type": "CallFunction",
+						"name": "Get Control Rotation",
+						"member_parent": "Pawn",
+						"member_name": "GetControlRotation",
+						"pure": true,
+						"input_pins": [
+							{
+								"id": "P1",
+								"name": "Target",
+								"type": "Object",
+								"sub_type": "Pawn"
+							}
+						],
+						"output_pins": [
+							{
+								"id": "P2",
+								"name": "Return Value X (Roll)",
+								"type": "Real",
+								"sub_type": "float",
+								"default_value": "0.0"
+							},
+							{
+								"id": "P3",
+								"name": "Return Value Y (Pitch)",
+								"type": "Real",
+								"sub_type": "float",
+								"default_value": "0.0"
+							},
+							{
+								"id": "P4",
+								"name": "Return Value Z (Yaw)",
+								"type": "Real",
+								"sub_type": "float",
+								"default_value": "0.0",
+								"connected": true
+							}
+						]
+					},
+					{
+						"id": "N7",
+						"type": "CallFunction",
+						"name": "Stop Jumping",
+						"member_parent": "Character",
+						"member_name": "StopJumping",
+						"input_pins": [
+							{
+								"id": "P1",
+								"name": "",
+								"connected": true
+							},
+							{
+								"id": "P3",
+								"name": "Target",
+								"type": "Object",
+								"sub_type": "Character"
+							}
+						],
+						"output_pins": [
+							{
+								"id": "P2",
+								"name": ""
+							}
+						]
+					},
+					{
+						"id": "N8",
+						"type": "CallFunction",
+						"name": "Get Forward Vector",
+						"member_parent": "KismetMathLibrary",
+						"member_name": "GetForwardVector",
+						"pure": true,
+						"input_pins": [
+							{
+								"id": "P1",
+								"name": "In Rot X (Roll)",
+								"type": "Real",
+								"sub_type": "float",
+								"default_value": "0.0"
+							},
+							{
+								"id": "P2",
+								"name": "In Rot Y (Pitch)",
+								"type": "Real",
+								"sub_type": "float",
+								"default_value": "0.0"
+							},
+							{
+								"id": "P3",
+								"name": "In Rot Z (Yaw)",
+								"type": "Real",
+								"sub_type": "float",
+								"default_value": "0.0",
+								"connected": true
+							}
+						],
+						"output_pins": [
+							{
+								"id": "P4",
+								"name": "Return Value",
+								"type": "Struct",
+								"sub_type": "Vector",
+								"default_value": "0, 0, 0",
+								"connected": true
+							}
+						]
+					},
+					{
+						"id": "N9",
+						"type": "CallFunction",
+						"name": "Get Right Vector",
+						"member_parent": "KismetMathLibrary",
+						"member_name": "GetRightVector",
+						"pure": true,
+						"input_pins": [
+							{
+								"id": "P1",
+								"name": "In Rot X (Roll)",
+								"type": "Real",
+								"sub_type": "float",
+								"default_value": "0.0",
+								"connected": true
+							},
+							{
+								"id": "P2",
+								"name": "In Rot Y (Pitch)",
+								"type": "Real",
+								"sub_type": "float",
+								"default_value": "0.0"
+							},
+							{
+								"id": "P3",
+								"name": "In Rot Z (Yaw)",
+								"type": "Real",
+								"sub_type": "float",
+								"default_value": "0.0",
+								"connected": true
+							}
+						],
+						"output_pins": [
+							{
+								"id": "P4",
+								"name": "Return Value",
+								"type": "Struct",
+								"sub_type": "Vector",
+								"default_value": "0, 0, 0",
+								"connected": true
+							}
+						]
+					},
+					{
+						"id": "N10",
+						"type": "CallFunction",
+						"name": "Get Control Rotation",
+						"member_parent": "Pawn",
+						"member_name": "GetControlRotation",
+						"pure": true,
+						"input_pins": [
+							{
+								"id": "P1",
+								"name": "Target",
+								"type": "Object",
+								"sub_type": "Pawn"
+							}
+						],
+						"output_pins": [
+							{
+								"id": "P2",
+								"name": "Return Value X (Roll)",
+								"type": "Real",
+								"sub_type": "float",
+								"default_value": "0.0",
+								"connected": true
+							},
+							{
+								"id": "P3",
+								"name": "Return Value Y (Pitch)",
+								"type": "Real",
+								"sub_type": "float",
+								"default_value": "0.0"
+							},
+							{
+								"id": "P4",
+								"name": "Return Value Z (Yaw)",
+								"type": "Real",
+								"sub_type": "float",
+								"default_value": "0.0",
+								"connected": true
+							}
+						]
+					},
+					{
+						"id": "N11",
+						"type": "CallFunction",
+						"name": "IA_Jump",
+						"input_pins": [],
+						"output_pins": [
+							{
+								"id": "P1",
+								"name": "Triggered"
+							},
+							{
+								"id": "P2",
+								"name": "Started",
+								"connected": true
+							},
+							{
+								"id": "P3",
+								"name": "Ongoing"
+							},
+							{
+								"id": "P4",
+								"name": "Canceled"
+							},
+							{
+								"id": "P5",
+								"name": "Completed",
+								"connected": true
+							},
+							{
+								"id": "P6",
+								"name": "Action Value",
+								"type": "Boolean",
+								"default_value": "false"
+							},
+							{
+								"id": "P7",
+								"name": "Elapsed Seconds",
+								"type": "Real",
+								"sub_type": "double"
+							},
+							{
+								"id": "P8",
+								"name": "Triggered Seconds",
+								"type": "Real",
+								"sub_type": "double"
+							},
+							{
+								"id": "P9",
+								"name": "Input Action",
+								"type": "Object",
+								"sub_type": "InputAction",
+								"default_value": "IA_Jump"
+							}
+						]
+					},
+					{
+						"id": "N12",
+						"type": "CallFunction",
+						"name": "IA_Move",
+						"input_pins": [],
+						"output_pins": [
+							{
+								"id": "P1",
+								"name": "Triggered",
+								"connected": true
+							},
+							{
+								"id": "P2",
+								"name": "Started"
+							},
+							{
+								"id": "P3",
+								"name": "Ongoing"
+							},
+							{
+								"id": "P4",
+								"name": "Canceled"
+							},
+							{
+								"id": "P5",
+								"name": "Completed"
+							},
+							{
+								"id": "P6",
+								"name": "Action Value X",
+								"type": "Real",
+								"sub_type": "double",
+								"default_value": "0.0",
+								"connected": true
+							},
+							{
+								"id": "P7",
+								"name": "Action Value Y",
+								"type": "Real",
+								"sub_type": "double",
+								"default_value": "0.0",
+								"connected": true
+							},
+							{
+								"id": "P8",
+								"name": "Elapsed Seconds",
+								"type": "Real",
+								"sub_type": "double"
+							},
+							{
+								"id": "P9",
+								"name": "Triggered Seconds",
+								"type": "Real",
+								"sub_type": "double"
+							},
+							{
+								"id": "P10",
+								"name": "Input Action",
+								"type": "Object",
+								"sub_type": "InputAction",
+								"default_value": "IA_Move"
+							}
+						]
+					},
+					{
+						"id": "N13",
+						"type": "CallFunction",
+						"name": "IA_Look",
+						"input_pins": [],
+						"output_pins": [
+							{
+								"id": "P1",
+								"name": "Triggered",
+								"connected": true
+							},
+							{
+								"id": "P2",
+								"name": "Started"
+							},
+							{
+								"id": "P3",
+								"name": "Ongoing"
+							},
+							{
+								"id": "P4",
+								"name": "Canceled"
+							},
+							{
+								"id": "P5",
+								"name": "Completed"
+							},
+							{
+								"id": "P6",
+								"name": "Action Value X",
+								"type": "Real",
+								"sub_type": "double",
+								"default_value": "0.0",
+								"connected": true
+							},
+							{
+								"id": "P7",
+								"name": "Action Value Y",
+								"type": "Real",
+								"sub_type": "double",
+								"default_value": "0.0",
+								"connected": true
+							},
+							{
+								"id": "P8",
+								"name": "Elapsed Seconds",
+								"type": "Real",
+								"sub_type": "double"
+							},
+							{
+								"id": "P9",
+								"name": "Triggered Seconds",
+								"type": "Real",
+								"sub_type": "double"
+							},
+							{
+								"id": "P10",
+								"name": "Input Action",
+								"type": "Object",
+								"sub_type": "InputAction",
+								"default_value": "IA_Look"
+							}
+						]
+					},
+					{
+						"id": "N14",
+						"type": "DynamicCast",
+						"name": "Cast To PlayerController",
+						"member_name": "PlayerController",
+						"input_pins": [
+							{
+								"id": "P1",
+								"name": "",
+								"connected": true
+							},
+							{
+								"id": "P4",
+								"name": "Object",
+								"type": "Object",
+								"sub_type": "Object",
+								"connected": true
+							}
+						],
+						"output_pins": [
+							{
+								"id": "P2",
+								"name": "",
+								"connected": true
+							},
+							{
+								"id": "P3",
+								"name": "Cast Failed"
+							},
+							{
+								"id": "P5",
+								"name": "As Player Controller",
+								"type": "Object",
+								"sub_type": "PlayerController",
+								"connected": true
+							}
+						]
+					},
+					{
+						"id": "N16",
+						"type": "GetSubsystem",
+						"name": "Get EnhancedInputLocalPlayerSubsystem",
+						"pure": true,
+						"input_pins": [
+							{
+								"id": "P1",
+								"name": "Player Controller",
+								"type": "Object",
+								"sub_type": "PlayerController",
+								"connected": true
+							}
+						],
+						"output_pins": [
+							{
+								"id": "P2",
+								"name": "Return Value",
+								"type": "Object",
+								"sub_type": "EnhancedInputLocalPlayerSubsystem",
+								"connected": true
+							}
+						]
+					},
+					{
+						"id": "N15",
+						"type": "CallFunction",
+						"name": "Add Mapping Context",
+						"member_parent": "EnhancedInputSubsystemInterface",
+						"member_name": "AddMappingContext",
+						"input_pins": [
+							{
+								"id": "P1",
+								"name": "",
+								"connected": true
+							},
+							{
+								"id": "P3",
+								"name": "Target",
+								"type": "Interface",
+								"sub_type": "EnhancedInputSubsystemInterface",
+								"connected": true
+							},
+							{
+								"id": "P4",
+								"name": "Mapping Context",
+								"type": "Object",
+								"sub_type": "InputMappingContext",
+								"default_value": "/Game/ThirdPerson/Input/IMC_Default.IMC_Default",
+								"is_const": true
+							},
+							{
+								"id": "P5",
+								"name": "Priority",
+								"type": "Integer",
+								"default_value": "0"
+							},
+							{
+								"id": "P6",
+								"name": "Options",
+								"type": "Struct",
+								"sub_type": "ModifyContextOptions",
+								"default_value": "(bIgnoreAllPressedKeysUntilRelease=True,bForceImmediately=False,bNotifyUserSettings=False)",
+								"is_reference": true,
+								"is_const": true
+							}
+						],
+						"output_pins": [
+							{
+								"id": "P2",
+								"name": ""
+							}
+						]
+					},
+					{
+						"id": "N17",
+						"type": "Event",
+						"name": "Event Receive Controller Changed",
+						"member_parent": "/Script/Engine.Pawn",
+						"member_name": "ReceiveControllerChanged",
+						"input_pins": [],
+						"output_pins": [
+							{
+								"id": "P1",
+								"name": "Output Delegate",
+								"type": "Delegate"
+							},
+							{
+								"id": "P2",
+								"name": "",
+								"connected": true
+							},
+							{
+								"id": "P3",
+								"name": "Old Controller",
+								"type": "Object",
+								"sub_type": "Controller"
+							},
+							{
+								"id": "P4",
+								"name": "New Controller",
+								"type": "Object",
+								"sub_type": "Controller",
+								"connected": true
+							}
+						]
+					}
+				],
+				"flows":
+				{
+					"execution": [
+						"N3->N2",
+						"N5->N4",
+						"N11->N1",
+						"N11->N7",
+						"N12->N5",
+						"N13->N3",
+						"N14->N15",
+						"N17->N14"
+					],
+					"data":
+					{
+						"N6.P4": "N8.P3",
+						"N8.P4": "N4.P4",
+						"N9.P4": "N5.P4",
+						"N10.P2": "N9.P1",
+						"N10.P4": "N9.P3",
+						"N12.P6": "N5.P5",
+						"N12.P7": "N4.P5",
+						"N13.P6": "N3.P4",
+						"N13.P7": "N2.P4",
+						"N14.P5": "N16.P1",
+						"N16.P2": "N15.P3",
+						"N17.P4": "N14.P4"
+					}
+				}
+			}
+		],
+		"structs": [],
+		"enums": []
+	}
