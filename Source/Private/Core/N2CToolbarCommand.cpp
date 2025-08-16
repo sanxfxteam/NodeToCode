@@ -11,12 +11,21 @@
 const FName FN2CToolbarCommand::CommandName_Open = TEXT("NodeToCode_OpenWindow");
 const FName FN2CToolbarCommand::CommandName_Collect = TEXT("NodeToCode_CollectNodes");
 const FName FN2CToolbarCommand::CommandName_CopyJson = TEXT("NodeToCode_CopyJson");
+const FName FN2CToolbarCommand::CommandName_ExportAll = TEXT("NodeToCode_ExportAll");
+const FName FN2CToolbarCommand::CommandName_ExportCurrent = TEXT("NodeToCode_ExportCurrent");
+const FName FN2CToolbarCommand::CommandName_TranslatorSettings = TEXT("NodeToCode_TranslatorSettings");
 const FText FN2CToolbarCommand::CommandLabel_Open = NSLOCTEXT("NodeToCode", "OpenWindow", "Open Node to Code");
 const FText FN2CToolbarCommand::CommandLabel_Collect = NSLOCTEXT("NodeToCode", "CollectNodes", "Collect and Translate Nodes");
 const FText FN2CToolbarCommand::CommandLabel_CopyJson = NSLOCTEXT("NodeToCode", "CopyJson", "Copy Blueprint JSON");
+const FText FN2CToolbarCommand::CommandLabel_ExportAll = NSLOCTEXT("NodeToCode", "ExportAll", "Export All Blueprints");
+const FText FN2CToolbarCommand::CommandLabel_ExportCurrent = NSLOCTEXT("NodeToCode", "ExportCurrent", "Export Current Blueprint");
+const FText FN2CToolbarCommand::CommandLabel_TranslatorSettings = NSLOCTEXT("NodeToCode", "TranslatorSettings", "Translator Settings...");
 const FText FN2CToolbarCommand::CommandTooltip_Open = NSLOCTEXT("NodeToCode", "OpenWindowTooltip", "Open the Node to Code window");
 const FText FN2CToolbarCommand::CommandTooltip_Collect = NSLOCTEXT("NodeToCode", "CollectNodesTooltip", "Collect nodes from current Blueprint graph and translate to code");
 const FText FN2CToolbarCommand::CommandTooltip_CopyJson = NSLOCTEXT("NodeToCode", "CopyJsonTooltip", "Copy the serialized Blueprint JSON to clipboard");
+const FText FN2CToolbarCommand::CommandTooltip_ExportAll = NSLOCTEXT("NodeToCode", "ExportAllTooltip", "Export all Blueprints in the project to JSON files");
+const FText FN2CToolbarCommand::CommandTooltip_ExportCurrent = NSLOCTEXT("NodeToCode", "ExportCurrentTooltip", "Export the current Blueprint to JSON file");
+const FText FN2CToolbarCommand::CommandTooltip_TranslatorSettings = NSLOCTEXT("NodeToCode", "TranslatorSettingsTooltip", "Open the translator settings panel");
 
 FN2CToolbarCommand::FN2CToolbarCommand()
     : TCommands<FN2CToolbarCommand>(
@@ -49,12 +58,36 @@ void FN2CToolbarCommand::RegisterCommands()
     );
     
     UI_COMMAND(
-    CopyJsonCommand,
-    "Copy Blueprint JSON",
-    "Copy the serialized Blueprint JSON to clipboard for external use",
-    EUserInterfaceActionType::Button,
-    FInputChord()
-);
+        CopyJsonCommand,
+        "Copy Blueprint JSON",
+        "Copy the serialized Blueprint JSON to clipboard for external use",
+        EUserInterfaceActionType::Button,
+        FInputChord()
+    );
+
+    UI_COMMAND(
+        ExportAllBlueprintsCommand,
+        "Export All Blueprints",
+        "Export all Blueprints in the project to JSON files",
+        EUserInterfaceActionType::Button,
+        FInputChord()
+    );
+
+    UI_COMMAND(
+        ExportCurrentBlueprintCommand,
+        "Export Current Blueprint",
+        "Export the current Blueprint to JSON file",
+        EUserInterfaceActionType::Button,
+        FInputChord()
+    );
+
+    UI_COMMAND(
+        TranslatorSettingsCommand,
+        "Translator Settings...",
+        "Open the translator settings panel",
+        EUserInterfaceActionType::Button,
+        FInputChord()
+    );
     
     FN2CLogger::Get().Log(TEXT("N2C toolbar commands registered"), EN2CLogSeverity::Debug);
 }

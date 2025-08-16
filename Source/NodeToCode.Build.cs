@@ -36,7 +36,10 @@ public class NodeToCode : ModuleRules
 				"UMG",
 				"ToolMenus",
 				"ApplicationCore",
-				"Projects"
+				"Projects",
+				"AssetRegistry",
+				"EditorStyle",
+				"EditorWidgets"
 			}
 		);
         

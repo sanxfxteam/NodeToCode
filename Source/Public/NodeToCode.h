@@ -64,4 +64,10 @@ private:
 
     /** Show notification that editor restart is required for config settings to work*/
     void ShowRestartRequiredNotification();
+
+    /** Register translator settings with the settings module */
+    void RegisterTranslatorSettings();
+
+    /** Unregister translator settings from the settings module */
+    void UnregisterTranslatorSettings();
 };

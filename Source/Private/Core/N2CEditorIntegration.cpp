@@ -11,10 +11,12 @@
 #include "Core/N2CSerializer.h"
 #include "Core/N2CSettings.h"
 #include "Core/N2CToolbarCommand.h"
+#include "Core/N2CTranslatorManager.h"
 #include "LLM/N2CLLMModule.h"
 #include "LLM/N2CLLMTypes.h"
 #include "Framework/Notifications/NotificationManager.h"
 #include "Widgets/Notifications/SNotificationList.h"
+#include "ISettingsModule.h"
 
 #if PLATFORM_WINDOWS
 #include "Windows/WindowsPlatformApplicationMisc.h"
@@ -323,6 +325,56 @@ void FN2CEditorIntegration::RegisterToolbarForEditor(TSharedPtr<FBlueprintEditor
         })
     );
 
+    // Map the Export All Blueprints command
+    CommandList->MapAction(
+        FN2CToolbarCommand::Get().ExportAllBlueprintsCommand,
+        FExecuteAction::CreateLambda([this]()
+        {
+            FN2CLogger::Get().Log(TEXT("Export All Blueprints triggered"), EN2CLogSeverity::Info);
+            ExecuteExportAllBlueprints();
+        }),
+        FCanExecuteAction::CreateLambda([]()
+        {
+            return !FN2CTranslatorManager::Get().IsBatchProcessingActive();
+        })
+    );
+
+    // Map the Export Current Blueprint command
+    CommandList->MapAction(
+        FN2CToolbarCommand::Get().ExportCurrentBlueprintCommand,
+        FExecuteAction::CreateLambda([this, WeakEditor, BlueprintName]()
+        {
+            FN2CLogger::Get().Log(
+                FString::Printf(TEXT("Export Current Blueprint triggered for Blueprint: %s"), *BlueprintName),
+                EN2CLogSeverity::Info
+            );
+            ExecuteExportCurrentBlueprint(WeakEditor);
+        }),
+        FCanExecuteAction::CreateLambda([WeakEditor]()
+        {
+            TSharedPtr<FBlueprintEditor> Editor = WeakEditor.Pin();
+            if (!Editor.IsValid())
+            {
+                return false;
+            }
+            return Editor->GetCurrentMode() == FBlueprintEditorApplicationModes::StandardBlueprintEditorMode;
+        })
+    );
+
+    // Map the Translator Settings command
+    CommandList->MapAction(
+        FN2CToolbarCommand::Get().TranslatorSettingsCommand,
+        FExecuteAction::CreateLambda([this]()
+        {
+            FN2CLogger::Get().Log(TEXT("Translator Settings triggered"), EN2CLogSeverity::Info);
+            ExecuteOpenTranslatorSettings();
+        }),
+        FCanExecuteAction::CreateLambda([]()
+        {
+            return true;
+        })
+    );
+
     // Store in our map
     EditorCommandLists.Add(WeakEditor, CommandList);
     FN2CLogger::Get().Log(
@@ -350,6 +402,11 @@ void FN2CEditorIntegration::RegisterToolbarForEditor(TSharedPtr<FBlueprintEditor
                     MenuBuilder.AddMenuEntry(FN2CToolbarCommand::Get().OpenWindowCommand);
                     MenuBuilder.AddMenuEntry(FN2CToolbarCommand::Get().CollectNodesCommand);
                     MenuBuilder.AddMenuEntry(FN2CToolbarCommand::Get().CopyJsonCommand);
+                    MenuBuilder.AddMenuSeparator();
+                    MenuBuilder.AddMenuEntry(FN2CToolbarCommand::Get().ExportAllBlueprintsCommand);
+                    MenuBuilder.AddMenuEntry(FN2CToolbarCommand::Get().ExportCurrentBlueprintCommand);
+                    MenuBuilder.AddMenuSeparator();
+                    MenuBuilder.AddMenuEntry(FN2CToolbarCommand::Get().TranslatorSettingsCommand);
 
                     return MenuBuilder.MakeWidget();
                 }),
@@ -545,4 +602,166 @@ void FN2CEditorIntegration::ExecuteCollectNodesForEditor(TWeakPtr<FBlueprintEdit
             FN2CLogger::Get().LogError(TEXT("Failed to translate nodes"));
         }
     }
+}
+
+void FN2CEditorIntegration::ExecuteExportAllBlueprints()
+{
+    FN2CLogger::Get().Log(TEXT("ExecuteExportAllBlueprints called"), EN2CLogSeverity::Info);
+
+    // Initialize the translator manager if not already done
+    FN2CTranslatorManager& TranslatorManager = FN2CTranslatorManager::Get();
+    if (!TranslatorManager.IsInitialized())
+    {
+        TranslatorManager.Initialize();
+    }
+
+    // Check if batch processing is already active
+    if (TranslatorManager.IsBatchProcessingActive())
+    {
+        FN2CLogger::Get().LogWarning(TEXT("Batch processing is already active"));
+        
+        // Show notification
+        FNotificationInfo NotificationInfo(NSLOCTEXT("NodeToCode", "BatchAlreadyActive", "Blueprint export is already in progress"));
+        NotificationInfo.bFireAndForget = true;
+        NotificationInfo.FadeOutDuration = 3.0f;
+        NotificationInfo.ExpireDuration = 3.0f;
+        FSlateNotificationManager::Get().AddNotification(NotificationInfo);
+        return;
+    }
+
+    // Show starting notification
+    FNotificationInfo StartNotificationInfo(NSLOCTEXT("NodeToCode", "ExportAllStarted", "Starting export of all Blueprints..."));
+    StartNotificationInfo.bFireAndForget = true;
+    StartNotificationInfo.FadeOutDuration = 2.0f;
+    StartNotificationInfo.ExpireDuration = 2.0f;
+    FSlateNotificationManager::Get().AddNotification(StartNotificationInfo);
+
+    // Start the export process
+    FN2CBatchResult Result = TranslatorManager.ExportAllBlueprints();
+
+    // Show completion notification
+    FText NotificationText;
+    if (Result.bSuccess)
+    {
+        NotificationText = FText::Format(
+            NSLOCTEXT("NodeToCode", "ExportAllSuccess", "Successfully exported {0} Blueprints"),
+            FText::AsNumber(Result.ProcessedSuccessfully)
+        );
+    }
+    else
+    {
+        NotificationText = FText::Format(
+            NSLOCTEXT("NodeToCode", "ExportAllPartial", "Export completed: {0} successful, {1} failed"),
+            FText::AsNumber(Result.ProcessedSuccessfully),
+            FText::AsNumber(Result.Failed)
+        );
+    }
+
+    FNotificationInfo CompletionNotificationInfo(NotificationText);
+    CompletionNotificationInfo.bFireAndForget = true;
+    CompletionNotificationInfo.FadeOutDuration = 5.0f;
+    CompletionNotificationInfo.ExpireDuration = 5.0f;
+    FSlateNotificationManager::Get().AddNotification(CompletionNotificationInfo);
+
+    FN2CLogger::Get().Log(
+        FString::Printf(TEXT("Export all Blueprints completed: %d successful, %d failed"), 
+        Result.ProcessedSuccessfully, Result.Failed),
+        Result.bSuccess ? EN2CLogSeverity::Info : EN2CLogSeverity::Warning
+    );
+}
+
+void FN2CEditorIntegration::ExecuteExportCurrentBlueprint(TWeakPtr<FBlueprintEditor> InEditor)
+{
+    FN2CLogger::Get().Log(TEXT("ExecuteExportCurrentBlueprint called"), EN2CLogSeverity::Info);
+
+    // Get the editor pointer
+    TSharedPtr<FBlueprintEditor> Editor = InEditor.Pin();
+    if (!Editor.IsValid())
+    {
+        FN2CLogger::Get().LogError(TEXT("Invalid Blueprint Editor pointer"));
+        
+        FNotificationInfo NotificationInfo(NSLOCTEXT("NodeToCode", "InvalidEditor", "Invalid Blueprint Editor"));
+        NotificationInfo.bFireAndForget = true;
+        NotificationInfo.FadeOutDuration = 3.0f;
+        NotificationInfo.ExpireDuration = 3.0f;
+        FSlateNotificationManager::Get().AddNotification(NotificationInfo);
+        return;
+    }
+
+    // Get the Blueprint being edited
+    UBlueprint* Blueprint = Editor->GetBlueprintObj();
+    if (!Blueprint)
+    {
+        FN2CLogger::Get().LogError(TEXT("No Blueprint found in editor"));
+        
+        FNotificationInfo NotificationInfo(NSLOCTEXT("NodeToCode", "NoBlueprint", "No Blueprint found in editor"));
+        NotificationInfo.bFireAndForget = true;
+        NotificationInfo.FadeOutDuration = 3.0f;
+        NotificationInfo.ExpireDuration = 3.0f;
+        FSlateNotificationManager::Get().AddNotification(NotificationInfo);
+        return;
+    }
+
+    // Initialize the translator manager if not already done
+    FN2CTranslatorManager& TranslatorManager = FN2CTranslatorManager::Get();
+    if (!TranslatorManager.IsInitialized())
+    {
+        TranslatorManager.Initialize();
+    }
+
+    const FString BlueprintName = Blueprint->GetName();
+
+    // Show starting notification
+    FNotificationInfo StartNotificationInfo(FText::Format(
+        NSLOCTEXT("NodeToCode", "ExportCurrentStarted", "Exporting Blueprint: {0}..."),
+        FText::FromString(BlueprintName)
+    ));
+    StartNotificationInfo.bFireAndForget = true;
+    StartNotificationInfo.FadeOutDuration = 2.0f;
+    StartNotificationInfo.ExpireDuration = 2.0f;
+    FSlateNotificationManager::Get().AddNotification(StartNotificationInfo);
+
+    // Export the Blueprint
+    FN2CExportResult Result = TranslatorManager.ExportBlueprint(Blueprint);
+
+    // Show completion notification
+    FText NotificationText;
+    if (Result.bSuccess)
+    {
+        NotificationText = FText::Format(
+            NSLOCTEXT("NodeToCode", "ExportCurrentSuccess", "Successfully exported Blueprint: {0}"),
+            FText::FromString(BlueprintName)
+        );
+    }
+    else
+    {
+        NotificationText = FText::Format(
+            NSLOCTEXT("NodeToCode", "ExportCurrentFailed", "Failed to export Blueprint: {0} - {1}"),
+            FText::FromString(BlueprintName),
+            FText::FromString(Result.ErrorMessage)
+        );
+    }
+
+    FNotificationInfo CompletionNotificationInfo(NotificationText);
+    CompletionNotificationInfo.bFireAndForget = true;
+    CompletionNotificationInfo.FadeOutDuration = 4.0f;
+    CompletionNotificationInfo.ExpireDuration = 4.0f;
+    FSlateNotificationManager::Get().AddNotification(CompletionNotificationInfo);
+
+    FN2CLogger::Get().Log(
+        FString::Printf(TEXT("Export Blueprint '%s' %s"), 
+        *BlueprintName, Result.bSuccess ? TEXT("successful") : *FString::Printf(TEXT("failed: %s"), *Result.ErrorMessage)),
+        Result.bSuccess ? EN2CLogSeverity::Info : EN2CLogSeverity::Error
+    );
+}
+
+void FN2CEditorIntegration::ExecuteOpenTranslatorSettings()
+{
+    FN2CLogger::Get().Log(TEXT("ExecuteOpenTranslatorSettings called"), EN2CLogSeverity::Info);
+
+    // Open the project settings to the NodeToCode Translator section
+    ISettingsModule& SettingsModule = FModuleManager::LoadModuleChecked<ISettingsModule>("Settings");
+    
+    SettingsModule.ShowViewer("Project", "Plugins", "NodeToCodeTranslator");
+    FN2CLogger::Get().Log(TEXT("Opened NodeToCode Translator settings"), EN2CLogSeverity::Info);
 }

@@ -15,6 +15,9 @@
 #include "Models/N2CStyle.h"
 #include "Framework/Notifications/NotificationManager.h"
 #include "Widgets/Notifications/SNotificationList.h"
+#include "Core/N2CTranslatorSettings.h"
+#include "Core/N2CTranslatorManager.h"
+#include "ISettingsModule.h"
 #if WITH_EDITOR
 #include "UnrealEdMisc.h"
 #endif
@@ -67,6 +70,13 @@ void FNodeToCodeModule::StartupModule()
     // Initialize editor integration
     FN2CEditorIntegration::Get().Initialize();
     FN2CLogger::Get().Log(TEXT("Editor integration initialized"), EN2CLogSeverity::Debug);
+
+    // Register translator settings
+    RegisterTranslatorSettings();
+
+    // Initialize translator manager
+    FN2CTranslatorManager::Get().Initialize();
+    FN2CLogger::Get().Log(TEXT("Translator manager initialized"), EN2CLogSeverity::Debug);
     
     // Register widget factory
     FN2CCodeEditorWidgetFactory::Register();
@@ -95,6 +105,12 @@ void FNodeToCodeModule::ShutdownModule()
     // Unregister menu extensions
     UToolMenus::UnRegisterStartupCallback(this);
     UToolMenus::UnregisterOwner(this);
+
+    // Shutdown translator manager
+    FN2CTranslatorManager::Get().Shutdown();
+
+    // Unregister translator settings
+    UnregisterTranslatorSettings();
 
     // Shutdown editor integration
     FN2CEditorIntegration::Get().Shutdown();
@@ -191,6 +207,27 @@ void FNodeToCodeModule::ShowRestartRequiredNotification()
 }
 
 
-#undef LOCTEXT_NAMESPACE
-    
 IMPLEMENT_MODULE(FNodeToCodeModule, NodeToCode)
+
+void FNodeToCodeModule::RegisterTranslatorSettings()
+{
+    ISettingsModule& SettingsModule = FModuleManager::LoadModuleChecked<ISettingsModule>("Settings");
+    
+    SettingsModule.RegisterSettings("Project", "Plugins", "NodeToCodeTranslator",
+        LOCTEXT("TranslatorSettingsName", "Node to Code Translator"),
+        LOCTEXT("TranslatorSettingsDescription", "Configure automatic Blueprint JSON translation settings"),
+        GetMutableDefault<UN2CTranslatorSettings>()
+    );
+    
+    FN2CLogger::Get().Log(TEXT("Registered NodeToCode Translator settings"), EN2CLogSeverity::Info);
+}
+
+void FNodeToCodeModule::UnregisterTranslatorSettings()
+{
+    ISettingsModule& SettingsModule = FModuleManager::LoadModuleChecked<ISettingsModule>("Settings");
+    
+    SettingsModule.UnregisterSettings("Project", "Plugins", "NodeToCodeTranslator");
+    FN2CLogger::Get().Log(TEXT("Unregistered NodeToCode Translator settings"), EN2CLogSeverity::Info);
+}
+
+#undef LOCTEXT_NAMESPACE

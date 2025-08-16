@@ -18,6 +18,33 @@ This is an Unreal Engine plugin project that follows UE's module system:
 ### Dependencies
 The plugin depends on core UE modules including BlueprintGraph, GraphEditor, HTTP, JSON, and UMG for UI components.
 
+### Compiling the Plugin
+
+To compile the NodeToCode plugin from the command line:
+
+**Method 1: Using RunUAT BuildPlugin (Recommended)**
+```bash
+# Build and package the plugin for distribution
+"C:\UE\UE_5.5_AS_2\Engine\Build\BatchFiles\RunUAT.bat" BuildPlugin -Plugin="C:\Projects\Testbeds\NodeToCode\NodeToCode.uplugin" -Package="C:\Projects\Testbeds\NodeToCode\Package" -CreateSubFolder
+```
+
+**Method 2: Using UnrealBuildTool directly**
+```bash
+# From the project root directory
+"C:\UE\UE_5.5_AS_2\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.exe" -ModuleFiles="Source\NodeToCode.Build.cs" -Platform=Win64 -Configuration=Development
+```
+
+**Build Requirements:**
+- Visual Studio 2022 with C++ development tools
+- Windows 10/11 SDK
+- .NET SDK 8.0.300 (bundled with UE5)
+- Unreal Engine 5.5 installed at `C:\UE\UE_5.5_AS_2\`
+
+**Build Output:**
+- Compiled binaries: `Binaries/Win64/UnrealEditor-NodeToCode.dll`
+- Generated headers: `Intermediate/Build/Win64/UnrealEditor/Inc/NodeToCode/UHT/`
+- Log files: `%LOCALAPPDATA%\UnrealBuildTool\Log.txt`
+
 ## Code Architecture
 
 ### Core Translation Pipeline

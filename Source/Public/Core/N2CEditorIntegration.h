@@ -56,6 +56,15 @@ private:
 
     /** Execute copy blueprint JSON to clipboard for a specific editor */
     void ExecuteCopyJsonForEditor(TWeakPtr<FBlueprintEditor> InEditor);
+
+    /** Execute export all blueprints to files */
+    void ExecuteExportAllBlueprints();
+
+    /** Execute export current blueprint to file */
+    void ExecuteExportCurrentBlueprint(TWeakPtr<FBlueprintEditor> InEditor);
+
+    /** Execute open translator settings */
+    void ExecuteOpenTranslatorSettings();
     
     /** Handle asset editor opened callback */
     void HandleAssetEditorOpened(UObject* Asset, IAssetEditorInstance* EditorInstance);
