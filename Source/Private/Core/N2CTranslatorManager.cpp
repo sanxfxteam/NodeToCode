@@ -269,11 +269,6 @@ const UN2CTranslatorSettings* FN2CTranslatorManager::GetEffectiveSettings(const 
 void FN2CTranslatorManager::HandleBatchComplete(const FN2CBatchResult& Result)
 {
     UpdateExportStatistics(Result);
-    
-    if (OnBatchComplete.IsBound())
-    {
-        OnBatchComplete.Execute(Result);
-    }
 
     const FString StatusMessage = Result.bSuccess ? 
         FString::Printf(TEXT("Batch export completed successfully: %d Blueprints exported"), Result.ProcessedSuccessfully) :
