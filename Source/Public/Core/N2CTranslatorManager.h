@@ -9,6 +9,9 @@
 #include "N2CTranslatorSettings.h"
 #include "N2CBatchProcessor.h"
 
+// Forward declarations
+class FObjectPostSaveContext;
+
 /**
  * @class FN2CTranslatorManager
  * @brief Main interface for automatic Blueprint JSON translation functionality
@@ -110,7 +113,10 @@ private:
     /** Cleanup auto-export triggers */
     void CleanupAutoExportTriggers();
 
-    /** Handle asset saved event for auto-export */
+    /** Handle package saved event for auto-export */
+    void OnPackageSaved(const FString& PackageFilename, UPackage* Package, FObjectPostSaveContext ObjectSaveContext);
+    
+    /** Handle asset saved event for auto-export (legacy) */
     void OnAssetSaved(const FAssetData& AssetData);
 
     /** Static wrapper for editor startup delegate */

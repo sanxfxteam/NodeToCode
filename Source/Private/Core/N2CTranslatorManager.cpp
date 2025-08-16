@@ -6,6 +6,11 @@
 #include "Utils/N2CLogger.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Editor.h"
+#include "Engine/ObjectLibrary.h"
+#include "Async/Async.h"
+#include "UObject/SavePackage.h"
+#include "UObject/Package.h"
+#include "UObject/ObjectSaveContext.h"
 
 FN2CTranslatorManager& FN2CTranslatorManager::Get()
 {
@@ -323,9 +328,9 @@ void FN2CTranslatorManager::SetupAutoExportTriggers()
         case EN2CExportTrigger::OnAssetSave:
             if (GEditor)
             {
-                // Use asset registry module for asset changes
-                FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-                AssetSavedHandle = AssetRegistryModule.Get().OnAssetAdded().AddRaw(this, &FN2CTranslatorManager::OnAssetSaved);
+                // Use UPackage saved delegate to detect when Blueprints are saved
+                AssetSavedHandle = UPackage::PackageSavedWithContextEvent.AddRaw(this, &FN2CTranslatorManager::OnPackageSaved);
+                FN2CLogger::Get().Log(TEXT("Auto-export on Blueprint save enabled"), EN2CLogSeverity::Info);
             }
             break;
 
@@ -348,8 +353,7 @@ void FN2CTranslatorManager::CleanupAutoExportTriggers()
 {
     if (AssetSavedHandle.IsValid())
     {
-        FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-        AssetRegistryModule.Get().OnAssetAdded().Remove(AssetSavedHandle);
+        UPackage::PackageSavedWithContextEvent.Remove(AssetSavedHandle);
         AssetSavedHandle.Reset();
     }
 
@@ -360,6 +364,54 @@ void FN2CTranslatorManager::CleanupAutoExportTriggers()
     }
 
     FN2CLogger::Get().Log(TEXT("Auto-export triggers cleaned up"), EN2CLogSeverity::Debug);
+}
+
+void FN2CTranslatorManager::OnPackageSaved(const FString& PackageFilename, UPackage* Package, FObjectPostSaveContext ObjectSaveContext)
+{
+    if (!CachedSettings || !Package)
+    {
+        return;
+    }
+
+    FN2CLogger::Get().Log(
+        FString::Printf(TEXT("Package saved: %s"), *PackageFilename),
+        EN2CLogSeverity::Debug
+    );
+
+    // Find Blueprint assets in the saved package
+    TArray<UObject*> ObjectsInPackage;
+    GetObjectsWithOuter(Package, ObjectsInPackage, false);
+
+    for (UObject* Object : ObjectsInPackage)
+    {
+        UBlueprint* Blueprint = Cast<UBlueprint>(Object);
+        if (!Blueprint)
+        {
+            continue;
+        }
+
+        // Check if this Blueprint should be exported
+        const FString AssetPath = Blueprint->GetPathName();
+        if (!CachedSettings->ShouldIncludeBlueprint(AssetPath))
+        {
+            FN2CLogger::Get().Log(
+                FString::Printf(TEXT("Blueprint excluded by filters: %s"), *AssetPath),
+                EN2CLogSeverity::Debug
+            );
+            continue;
+        }
+
+        FN2CLogger::Get().Log(
+            FString::Printf(TEXT("Auto-export triggered for saved Blueprint: %s"), *Blueprint->GetName()),
+            EN2CLogSeverity::Info
+        );
+
+        // Export the Blueprint in background (non-blocking)
+        AsyncTask(ENamedThreads::GameThread, [this, Blueprint]()
+        {
+            ExportBlueprint(Blueprint, CachedSettings);
+        });
+    }
 }
 
 void FN2CTranslatorManager::OnAssetSaved(const FAssetData& AssetData)
