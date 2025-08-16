@@ -119,6 +119,9 @@ private:
     /** Handle asset saved event for auto-export (legacy) */
     void OnAssetSaved(const FAssetData& AssetData);
 
+    /** Handle asset deletion event for JSON cleanup */
+    void OnAssetDeleted(const FAssetData& AssetData);
+
     /** Static wrapper for editor startup delegate */
     static void StaticOnEditorStartup(double);
     
@@ -135,6 +138,7 @@ private:
 
     /** Delegates for auto-export triggers */
     FDelegateHandle AssetSavedHandle;
+    FDelegateHandle AssetDeletedHandle;
     FDelegateHandle EditorStartupHandle;
 
     /** Prevent copy construction and assignment */

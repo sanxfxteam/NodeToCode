@@ -316,6 +316,13 @@ void FN2CTranslatorManager::SetupAutoExportTriggers()
 
     FN2CLogger::Get().Log(TEXT("Setting up auto-export triggers"), EN2CLogSeverity::Debug);
 
+    // Always setup asset deletion monitoring for JSON cleanup
+    if (FAssetRegistryModule* AssetRegistryModule = FModuleManager::GetModulePtr<FAssetRegistryModule>("AssetRegistry"))
+    {
+        AssetDeletedHandle = AssetRegistryModule->Get().OnAssetRemoved().AddRaw(this, &FN2CTranslatorManager::OnAssetDeleted);
+        FN2CLogger::Get().Log(TEXT("Asset deletion monitoring enabled for JSON cleanup"), EN2CLogSeverity::Info);
+    }
+
     switch (CachedSettings->ExportTrigger)
     {
         case EN2CExportTrigger::OnStartup:
@@ -355,6 +362,15 @@ void FN2CTranslatorManager::CleanupAutoExportTriggers()
     {
         UPackage::PackageSavedWithContextEvent.Remove(AssetSavedHandle);
         AssetSavedHandle.Reset();
+    }
+
+    if (AssetDeletedHandle.IsValid())
+    {
+        if (FAssetRegistryModule* AssetRegistryModule = FModuleManager::GetModulePtr<FAssetRegistryModule>("AssetRegistry"))
+        {
+            AssetRegistryModule->Get().OnAssetRemoved().Remove(AssetDeletedHandle);
+        }
+        AssetDeletedHandle.Reset();
     }
 
     if (EditorStartupHandle.IsValid())
@@ -466,4 +482,40 @@ void FN2CTranslatorManager::OnEditorStartup()
 
     // Export all Blueprints on startup
     ExportAllBlueprints(CachedSettings);
+}
+
+void FN2CTranslatorManager::OnAssetDeleted(const FAssetData& AssetData)
+{
+    if (!CachedSettings)
+    {
+        return;
+    }
+
+    // Check if the deleted asset is a Blueprint
+    if (AssetData.AssetClassPath != UBlueprint::StaticClass()->GetClassPathName())
+    {
+        return;
+    }
+
+    const FString AssetPath = AssetData.PackageName.ToString();
+    
+    FN2CLogger::Get().Log(
+        FString::Printf(TEXT("Blueprint deleted, cleaning up JSON files: %s"), *AssetPath),
+        EN2CLogSeverity::Info
+    );
+
+    // Delete associated JSON files
+    if (FN2CFileExporter::DeleteBlueprintJsonFiles(AssetPath, CachedSettings))
+    {
+        FN2CLogger::Get().Log(
+            FString::Printf(TEXT("Successfully cleaned up JSON files for deleted Blueprint: %s"), *AssetPath),
+            EN2CLogSeverity::Info
+        );
+    }
+    else
+    {
+        FN2CLogger::Get().LogWarning(
+            FString::Printf(TEXT("Failed to clean up some JSON files for deleted Blueprint: %s"), *AssetPath)
+        );
+    }
 }

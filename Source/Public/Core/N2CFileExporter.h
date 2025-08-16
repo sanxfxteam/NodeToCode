@@ -42,6 +42,9 @@ public:
     /** Check if file should be overwritten based on modification times */
     static bool ShouldUpdateFile(const FString& FilePath, const UBlueprint* Blueprint, bool bIncrementalExport);
 
+    /** Delete JSON files associated with a Blueprint */
+    static bool DeleteBlueprintJsonFiles(const FString& BlueprintPath, const UN2CTranslatorSettings* Settings);
+
     /** Get file size of exported JSON */
     static int64 GetFileSize(const FString& FilePath);
 

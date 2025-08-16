@@ -395,6 +395,118 @@ FDateTime FN2CFileExporter::GetFileModificationTime(const FString& FilePath)
     return PlatformFile.GetTimeStamp(*FilePath);
 }
 
+bool FN2CFileExporter::DeleteBlueprintJsonFiles(const FString& BlueprintPath, const UN2CTranslatorSettings* Settings)
+{
+    if (!Settings)
+    {
+        FN2CLogger::Get().LogError(TEXT("Cannot delete Blueprint JSON files: Settings is null"));
+        return false;
+    }
+
+    // Convert from package path to relative path (e.g., "/Game/MyFolder/MyBlueprint" to "MyFolder/MyBlueprint")
+    FString RelativePath = BlueprintPath;
+    RelativePath = RelativePath.Replace(TEXT("/Game/"), TEXT(""));
+    
+    // Build export directory path
+    const FString ExportDir = FPaths::Combine(Settings->GetFullExportPath(), FPaths::GetPath(RelativePath));
+    const FString BaseFileName = FPaths::GetBaseFilename(RelativePath);
+    
+    bool bAllDeletedSuccessfully = true;
+    int32 DeletedFileCount = 0;
+    
+    // Find and delete JSON files associated with this Blueprint
+    IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+    
+    // Check for single file export (BlueprintName.json)
+    const FString SingleFilePath = FPaths::Combine(ExportDir, BaseFileName + TEXT(".json"));
+    if (PlatformFile.FileExists(*SingleFilePath))
+    {
+        if (PlatformFile.DeleteFile(*SingleFilePath))
+        {
+            DeletedFileCount++;
+            FN2CLogger::Get().Log(
+                FString::Printf(TEXT("Deleted JSON file: %s"), *SingleFilePath),
+                EN2CLogSeverity::Debug
+            );
+        }
+        else
+        {
+            bAllDeletedSuccessfully = false;
+            FN2CLogger::Get().LogError(
+                FString::Printf(TEXT("Failed to delete JSON file: %s"), *SingleFilePath)
+            );
+        }
+    }
+    
+    // Check for multiple files export (BlueprintName_GraphName.json pattern)
+    TArray<FString> JsonFiles;
+    PlatformFile.FindFiles(JsonFiles, *ExportDir, TEXT(".json"));
+    
+    for (const FString& JsonFile : JsonFiles)
+    {
+        const FString FullJsonPath = FPaths::Combine(ExportDir, JsonFile);
+        const FString JsonBaseName = FPaths::GetBaseFilename(JsonFile);
+        
+        // Check if this JSON file belongs to our Blueprint
+        // Pattern: BlueprintName_GraphName.json or BlueprintName.json
+        if (JsonBaseName.StartsWith(BaseFileName + TEXT("_")) || JsonBaseName == BaseFileName)
+        {
+            if (PlatformFile.DeleteFile(*FullJsonPath))
+            {
+                DeletedFileCount++;
+                FN2CLogger::Get().Log(
+                    FString::Printf(TEXT("Deleted JSON file: %s"), *FullJsonPath),
+                    EN2CLogSeverity::Debug
+                );
+            }
+            else
+            {
+                bAllDeletedSuccessfully = false;
+                FN2CLogger::Get().LogError(
+                    FString::Printf(TEXT("Failed to delete JSON file: %s"), *FullJsonPath)
+                );
+            }
+        }
+    }
+    
+    // Also delete any backup files associated with this Blueprint
+    TArray<FString> BackupFiles;
+    PlatformFile.FindFiles(BackupFiles, *ExportDir, TEXT("*backup.json"));
+    
+    for (const FString& BackupFile : BackupFiles)
+    {
+        const FString FullBackupPath = FPaths::Combine(ExportDir, BackupFile);
+        const FString BackupBaseName = FPaths::GetBaseFilename(BackupFile);
+        
+        // Check if this backup file belongs to our Blueprint
+        if (BackupBaseName.Contains(BaseFileName + TEXT("_")))
+        {
+            if (PlatformFile.DeleteFile(*FullBackupPath))
+            {
+                DeletedFileCount++;
+                FN2CLogger::Get().Log(
+                    FString::Printf(TEXT("Deleted backup file: %s"), *FullBackupPath),
+                    EN2CLogSeverity::Debug
+                );
+            }
+            else
+            {
+                bAllDeletedSuccessfully = false;
+                FN2CLogger::Get().LogError(
+                    FString::Printf(TEXT("Failed to delete backup file: %s"), *FullBackupPath)
+                );
+            }
+        }
+    }
+    
+    FN2CLogger::Get().Log(
+        FString::Printf(TEXT("JSON cleanup complete for Blueprint '%s': %d files deleted"), *BlueprintPath, DeletedFileCount),
+        EN2CLogSeverity::Info
+    );
+    
+    return bAllDeletedSuccessfully;
+}
+
 FString FN2CFileExporter::GenerateBackupFileName(const FString& OriginalFilePath)
 {
     const FDateTime Now = FDateTime::Now();
