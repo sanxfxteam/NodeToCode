@@ -176,6 +176,129 @@ When upgrading plugins from UE 5.4 to 5.5:
 - [ ] Verify LOCTEXT_NAMESPACE scope throughout files
 - [ ] Update any deprecated API calls based on compilation warnings
 
+## Auto-Export Event Handling
+
+### Package Save Event Detection
+**Best Practice**: For auto-export functionality on Blueprint saves, use `UPackage::PackageSavedWithContextEvent` instead of asset registry events.
+
+**Correct Implementation**:
+```cpp
+// Header file - Include proper forward declaration
+class FObjectPostSaveContext;
+
+class FMyManager
+{
+private:
+    void OnPackageSaved(const FString& PackageFilename, UPackage* Package, FObjectPostSaveContext ObjectSaveContext);
+    FDelegateHandle AssetSavedHandle;
+};
+
+// Implementation file - Include required headers
+#include "UObject/Package.h"
+#include "UObject/ObjectSaveContext.h"
+
+// Bind to package save events
+AssetSavedHandle = UPackage::PackageSavedWithContextEvent.AddRaw(this, &FMyManager::OnPackageSaved);
+
+// Cleanup
+UPackage::PackageSavedWithContextEvent.Remove(AssetSavedHandle);
+```
+
+**Why This Works Better**:
+- `PackageSavedWithContextEvent` triggers when packages are actually saved to disk
+- `OnAssetAdded` only triggers when new assets are created, not when existing ones are saved
+- `OnAssetUpdated` exists but is less reliable for save detection
+
+### Background Processing for Auto-Export
+**Best Practice**: Use `AsyncTask` to prevent main thread blocking during auto-export operations.
+
+**Pattern**:
+```cpp
+void OnPackageSaved(const FString& PackageFilename, UPackage* Package, FObjectPostSaveContext ObjectSaveContext)
+{
+    // Find Blueprints in the saved package
+    TArray<UObject*> ObjectsInPackage;
+    GetObjectsWithOuter(Package, ObjectsInPackage, false);
+    
+    for (UObject* Object : ObjectsInPackage)
+    {
+        if (UBlueprint* Blueprint = Cast<UBlueprint>(Object))
+        {
+            // Process in background to avoid blocking UI
+            AsyncTask(ENamedThreads::GameThread, [this, Blueprint]()
+            {
+                ExportBlueprint(Blueprint, Settings);
+            });
+        }
+    }
+}
+```
+
+**Key Benefits**:
+- Maintains UI responsiveness during export operations
+- Allows users to continue working while exports process
+- Prevents editor freezing on large Blueprint saves
+
+### Package Object Discovery
+**Best Practice**: Use `GetObjectsWithOuter()` to find all objects within a saved package.
+
+**Implementation**:
+```cpp
+// Find all objects in the saved package
+TArray<UObject*> ObjectsInPackage;
+GetObjectsWithOuter(Package, ObjectsInPackage, false); // false = don't include nested objects
+
+// Filter for specific object types
+for (UObject* Object : ObjectsInPackage)
+{
+    if (UBlueprint* Blueprint = Cast<UBlueprint>(Object))
+    {
+        // Process Blueprint
+    }
+}
+```
+
+**Why This Approach**:
+- More reliable than asset registry lookups during save events
+- Direct access to the objects being saved
+- Works consistently across different UE versions
+
+### Event Delegate Management
+**Best Practice**: Always store delegate handles and clean them up properly to prevent memory leaks.
+
+**Pattern**:
+```cpp
+class FMyManager
+{
+private:
+    FDelegateHandle AssetSavedHandle;
+    FDelegateHandle EditorStartupHandle;
+    
+public:
+    void SetupTriggers()
+    {
+        // Store handles for cleanup
+        AssetSavedHandle = UPackage::PackageSavedWithContextEvent.AddRaw(this, &FMyManager::OnPackageSaved);
+        EditorStartupHandle = FEditorDelegates::OnEditorInitialized.AddStatic(&FMyManager::StaticOnEditorStartup);
+    }
+    
+    void CleanupTriggers()
+    {
+        if (AssetSavedHandle.IsValid())
+        {
+            UPackage::PackageSavedWithContextEvent.Remove(AssetSavedHandle);
+            AssetSavedHandle.Reset();
+        }
+        
+        if (EditorStartupHandle.IsValid())
+        {
+            FEditorDelegates::OnEditorInitialized.Remove(EditorStartupHandle);
+            EditorStartupHandle.Reset();
+        }
+    }
+};
+```
+
 ## Conclusion
 
 UE 5.5 represents a significant step toward stricter C++ template compliance and improved type safety. While this makes some code more verbose (especially delegate binding), it results in more robust and maintainable plugins. The key is to work with the type system rather than against it, using static wrapper functions and proper API calls as the engine expects.
