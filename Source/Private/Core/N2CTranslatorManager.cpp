@@ -11,6 +11,7 @@
 #include "UObject/SavePackage.h"
 #include "UObject/Package.h"
 #include "UObject/ObjectSaveContext.h"
+#include "Misc/CoreMisc.h"
 
 FN2CTranslatorManager& FN2CTranslatorManager::Get()
 {
@@ -386,6 +387,16 @@ void FN2CTranslatorManager::OnPackageSaved(const FString& PackageFilename, UPack
 {
     if (!CachedSettings || !Package)
     {
+        return;
+    }
+
+    // Skip if we're cooking - only respond to normal editor saves
+    if (ObjectSaveContext.IsCooking())
+    {
+        FN2CLogger::Get().Log(
+            FString::Printf(TEXT("Skipping package save during cooking: %s"), *PackageFilename),
+            EN2CLogSeverity::Debug
+        );
         return;
     }
 
