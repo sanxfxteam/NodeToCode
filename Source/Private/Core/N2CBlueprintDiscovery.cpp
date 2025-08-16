@@ -269,7 +269,7 @@ bool FN2CBlueprintDiscovery::GetBlueprintMetadata(const FString& AssetPath, FStr
     IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
     
     // Find the asset
-    FAssetData AssetData = AssetRegistry.GetAssetByObjectPath(FName(*AssetPath));
+    FAssetData AssetData = AssetRegistry.GetAssetByObjectPath(FSoftObjectPath(AssetPath));
     if (!AssetData.IsValid())
     {
         return false;

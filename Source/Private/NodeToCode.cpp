@@ -17,6 +17,7 @@
 #include "Widgets/Notifications/SNotificationList.h"
 #include "Core/N2CTranslatorSettings.h"
 #include "Core/N2CTranslatorManager.h"
+#include "Core/N2CExporterCommandlet.h"
 #include "ISettingsModule.h"
 #if WITH_EDITOR
 #include "UnrealEdMisc.h"
