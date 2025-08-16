@@ -69,8 +69,8 @@ EN2CFileStrategy UN2CTranslatorSettings::GetEffectiveFileStrategy(int32 GraphCou
 
 FString UN2CTranslatorSettings::GetFullExportPath() const
 {
-    const FString ContentDir = FPaths::ProjectContentDir();
-    return FPaths::Combine(ContentDir, ExportDirectory);
+    const FString ProjectDir = FPaths::ProjectDir();
+    return FPaths::Combine(ProjectDir, ExportDirectory);
 }
 
 TArray<FString> UN2CTranslatorSettings::ValidateSettings() const
